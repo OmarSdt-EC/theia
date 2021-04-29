@@ -15,59 +15,41 @@
  ********************************************************************************/
 
 import * as chai from 'chai';
-import URI from '@theia/core/lib/common/uri';
-import { Container } from '@theia/core/shared/inversify';
-import { VSXEnvironment } from './vsx-environment';
-import { VSXRegistryAPI } from './vsx-registry-api';
-import { VSXSearchParam } from './vsx-registry-types';
-import { VSXApiVersionProvider } from './vsx-api-version-provider';
-import { EnvVariablesServer } from '@theia/core/lib/common/env-variables/env-variables-protocol';
+import { OVSXClient } from './ovsx-client';
+import { VSXSearchParam } from './ovsx-types';
 
 const expect = chai.expect;
 
 describe('VSX Registry API', () => {
 
-    let api: VSXRegistryAPI;
+    const apiUrl = 'https://open-vsx.org/api';
+    const apiVersion = '1.40.0';
 
-    beforeEach(() => {
-        const container = new Container();
-        container.bind(VSXRegistryAPI).toSelf().inSingletonScope();
-        container.bind(VSXEnvironment).toConstantValue(<VSXEnvironment>{
-            async getRegistryApiUri(): Promise<URI> {
-                return new URI('https://open-vsx.org/api');
-            },
-            async getRegistryUri(): Promise<URI> {
-                return new URI('https://open-vsx.org');
-            },
-            async getVscodeApiVersion(): Promise<string> {
-                return '1.40.0';
-            }
+    let client: OVSXClient;
+
+    before(() => {
+        client = new OVSXClient({
+            apiVersion,
+            apiUrl
         });
-        container.bind(EnvVariablesServer).toConstantValue({});
-        container.bind(VSXApiVersionProvider).toConstantValue(<VSXApiVersionProvider>{
-            getApiVersion(): string {
-                return '1.40.0';
-            }
-        });
-        api = container.get<VSXRegistryAPI>(VSXRegistryAPI);
     });
 
     describe('isEngineValid', () => {
 
         it('should return \'true\' for a compatible engine', () => {
-            const a: boolean = api['isEngineSupported']('^1.20.0');
-            const b: boolean = api['isEngineSupported']('^1.40.0');
+            const a: boolean = client['isEngineSupported']('^1.20.0');
+            const b: boolean = client['isEngineSupported']('^1.40.0');
             expect(a).to.eq(true);
             expect(b).to.eq(true);
         });
 
         it('should return \'false\' for a incompatible engine', () => {
-            const valid: boolean = api['isEngineSupported']('^1.50.0');
+            const valid: boolean = client['isEngineSupported']('^1.50.0');
             expect(valid).to.eq(false);
         });
 
         it('should return \'false\' for an undefined engine', () => {
-            const valid: boolean = api['isEngineSupported']();
+            const valid: boolean = client['isEngineSupported']();
             expect(valid).to.eq(false);
         });
 
@@ -80,7 +62,7 @@ describe('VSX Registry API', () => {
             const param: VSXSearchParam = {
                 query: 'javascript',
             };
-            const query = await api['buildSearchUri'](param);
+            const query = await client['buildSearchUri'](param);
             expect(query).to.eq(expected);
         });
 
@@ -93,7 +75,7 @@ describe('VSX Registry API', () => {
                 offset: 10,
                 includeAllVersions: true,
             };
-            let query = await api['buildSearchUri'](param);
+            let query = await client['buildSearchUri'](param);
             expect(query).to.eq(expected);
 
             expected = 'https://open-vsx.org/api/-/search?query=javascript&category=languages&size=20&offset=10&sortOrder=desc&sortBy=relevance&includeAllVersions=true';
@@ -106,7 +88,7 @@ describe('VSX Registry API', () => {
                 sortBy: 'relevance',
                 includeAllVersions: true
             };
-            query = await api['buildSearchUri'](param);
+            query = await client['buildSearchUri'](param);
             expect(query).to.eq(expected);
         });
 
@@ -121,7 +103,7 @@ describe('VSX Registry API', () => {
                 const param: VSXSearchParam = {
                     query: 'javascript',
                 };
-                const query = await api['buildSearchUri'](param);
+                const query = await client['buildSearchUri'](param);
                 expect(query).to.eq(expected);
             });
 
@@ -134,7 +116,7 @@ describe('VSX Registry API', () => {
                     offset: 10,
                     includeAllVersions: true,
                 };
-                let query = await api['buildSearchUri'](param);
+                let query = await client['buildSearchUri'](param);
                 expect(query).to.eq(expected);
 
                 expected = 'https://open-vsx.org/api/-/search?query=javascript&category=languages&size=20&offset=10&sortOrder=desc&sortBy=relevance&includeAllVersions=true';
@@ -147,7 +129,7 @@ describe('VSX Registry API', () => {
                     sortBy: 'relevance',
                     includeAllVersions: true
                 };
-                query = await api['buildSearchUri'](param);
+                query = await client['buildSearchUri'](param);
                 expect(query).to.eq(expected);
             });
 
