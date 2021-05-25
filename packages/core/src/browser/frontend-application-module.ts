@@ -98,6 +98,7 @@ import { EncodingRegistry } from './encoding-registry';
 import { EncodingService } from '../common/encoding-service';
 import { AuthenticationService, AuthenticationServiceImpl } from '../browser/authentication-service';
 import { WindowContribution } from './window-contribution';
+import { DecorationsService, DecorationsServiceImpl } from './decorations-service';
 
 export { bindResourceProvider, bindMessageService, bindPreferenceService };
 
@@ -344,4 +345,5 @@ export const frontendApplicationModule = new ContainerModule((bind, unbind, isBo
     for (const contribution of [CommandContribution, KeybindingContribution, MenuContribution]) {
         bind(contribution).toService(WindowContribution);
     }
+    bind(DecorationsService).to(DecorationsServiceImpl).inSingletonScope();
 });
