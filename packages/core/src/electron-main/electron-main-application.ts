@@ -31,6 +31,7 @@ import { ElectronSecurityTokenService } from './electron-security-token-service'
 import { ElectronSecurityToken } from '../electron-common/electron-token';
 import Storage = require('electron-store');
 const createYargs: (argv?: string[], cwd?: string) => Argv = require('yargs/yargs');
+let NMB_WINDOWS_OPENED: number = 0;
 
 /**
  * Theia tracks the maximized state of Electron Browser Windows.
@@ -216,11 +217,20 @@ export class ElectronMainApplication {
      */
     async createWindow(asyncOptions: MaybePromise<TheiaBrowserWindowOptions> = this.getDefaultBrowserWindowOptions()): Promise<BrowserWindow> {
         const options = await asyncOptions;
+        console.log(NMB_WINDOWS_OPENED);
+        console.log('x', options.x);
+        console.log('y', options.y);
+        if (NMB_WINDOWS_OPENED > 0) {
+            options.x = options.x! + 25;
+            options.y = options.y! + 25;
+        }
         const electronWindow = new BrowserWindow(options);
         this.attachReadyToShow(electronWindow);
         this.attachSaveWindowState(electronWindow);
         this.attachGlobalShortcuts(electronWindow);
         this.restoreMaximizedState(electronWindow, options);
+        NMB_WINDOWS_OPENED = NMB_WINDOWS_OPENED + 1;
+        console.log(NMB_WINDOWS_OPENED);
         return electronWindow;
     }
 
