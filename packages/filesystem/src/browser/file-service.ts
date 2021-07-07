@@ -1118,15 +1118,9 @@ export class FileService {
         const { exists, isSameResourceWithDifferentPathCase } = await this.doValidateMoveCopy(sourceProvider, source, targetProvider, target, mode, overwrite);
 
         // if target exists get valid target
-        if (exists && !overwrite && !isSameResourceWithDifferentPathCase) {
+        if (exists && !overwrite) {
             const parent = await this.resolve(target.parent);
-            const name = target.path.name + '_copy';
-            target = FileSystemUtils.generateUniqueResourceURI(target.parent, parent, name, target.path.ext);
-        }
-
-        if (exists && !overwrite && isSameResourceWithDifferentPathCase) {
-            const parent = await this.resolve(target.parent);
-            const name = target.path.name;
+            const name = isSameResourceWithDifferentPathCase ? target.path.name : target.path.name + '_copy';
             target = FileSystemUtils.generateUniqueResourceURI(target.parent, parent, name, target.path.ext);
         }
 
@@ -1229,7 +1223,7 @@ export class FileService {
         if (sourceProvider === targetProvider) {
             const isPathCaseSensitive = !!(sourceProvider.capabilities & FileSystemProviderCapabilities.PathCaseSensitive);
             if (!isPathCaseSensitive) {
-                isSameResourceWithDifferentPathCase = (source.toString().toLowerCase() === target.toString().toLowerCase());
+                isSameResourceWithDifferentPathCase = source.toString().toLowerCase() === target.toString().toLowerCase();
             }
 
             if (isSameResourceWithDifferentPathCase && mode === 'copy') {

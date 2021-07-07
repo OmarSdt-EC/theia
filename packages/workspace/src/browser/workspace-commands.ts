@@ -375,7 +375,7 @@ export class WorkspaceCommandContribution implements CommandContribution {
      * @param parent the parent directory's file stat.
      * @param recursive allow file or folder creation using recursive path
      */
-    protected async validateFileName(name: string, parent: FileStat, recursive: boolean = false, actualName?: string): Promise<string> {
+    protected async validateFileName(name: string, parent: FileStat, recursive: boolean = false, initialValue?: string): Promise<string> {
         if (!name) {
             return '';
         }
@@ -395,16 +395,17 @@ export class WorkspaceCommandContribution implements CommandContribution {
         const childUri = parent.resource.resolve(name);
         const exists = await this.fileService.exists(childUri);
         if (exists) {
-            if (actualName) {
-                const actualUri = parent.resource.resolve(actualName);
+            // Determine if the file is a case-insensitive version of the actual file.
+            if (initialValue) {
+                const actualUri = parent.resource.resolve(initialValue);
                 if (actualUri.isEqual(childUri, false)) {
                     return '';
                 };
             }
-            for (const child of parent.children!) {
-                if (child.resource.isEqual(childUri, false)) {
-                    return `A file or folder "${this.trimFileName(name)}" already exists at this location.`;
-                }
+
+            // Determine if the case-insensitive version already exists at the location.
+            if (parent.children?.some(child => child.resource.isEqual(childUri, false))) {
+                return `A file or folder "${this.trimFileName(name)}" already exists at this location.`;
             }
         }
         return '';
