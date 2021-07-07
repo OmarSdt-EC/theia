@@ -286,7 +286,7 @@ export class WorkspaceCommandContribution implements CommandContribution {
                                 if (initialValue === name && mode === 'preview') {
                                     return false;
                                 }
-                                return this.validateFileName(name, parent, false);
+                                return this.validateFileName(name, parent, false, initialValue);
                             }
                         });
                         const fileName = await dialog.open();
@@ -375,7 +375,7 @@ export class WorkspaceCommandContribution implements CommandContribution {
      * @param parent the parent directory's file stat.
      * @param recursive allow file or folder creation using recursive path
      */
-    protected async validateFileName(name: string, parent: FileStat, recursive: boolean = false): Promise<string> {
+    protected async validateFileName(name: string, parent: FileStat, recursive: boolean = false, actualName?: string): Promise<string> {
         if (!name) {
             return '';
         }
@@ -395,7 +395,17 @@ export class WorkspaceCommandContribution implements CommandContribution {
         const childUri = parent.resource.resolve(name);
         const exists = await this.fileService.exists(childUri);
         if (exists) {
-            return `A file or folder "${this.trimFileName(name)}" already exists at this location.`;
+            if (actualName) {
+                const actualUri = parent.resource.resolve(actualName);
+                if (actualUri.isEqual(childUri, false)) {
+                    return '';
+                };
+            }
+            for (const child of parent.children!) {
+                if (child.resource.isEqual(childUri, false)) {
+                    return `A file or folder "${this.trimFileName(name)}" already exists at this location.`;
+                }
+            }
         }
         return '';
     }
